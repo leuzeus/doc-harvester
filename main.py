@@ -6,6 +6,11 @@ import uvicorn
 
 app = FastAPI(title="Doc Harvester")
 
+@app.get("/versions")
+def versions(lang: str = Query(...), limit: int = Query(10)):
+    # retourne les versions disponibles
+    return {"lang": lang, "versions": list_versions(lang, limit)}
+
 @app.get("/fetch")
 def fetch_docs(lang: str = Query(...), version: str = Query("latest")):
     repo_path = clone_repo(lang, version)
