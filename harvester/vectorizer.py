@@ -11,7 +11,7 @@ def _init_client():
     # Lecture des variables d’environnement
     http_host = os.getenv("WEAVIATE_HOST", "weaviate")
     http_port = int(os.getenv("WEAVIATE_PORT", 8080))
-    grpc_host = http_hos
+    grpc_host = http_host
     grpc_port = int(os.getenv("WEAVIATE_GRPC_PORT", 50051))
     http_secure = os.getenv("WEAVIATE_HTTP_SECURE", "false").lower() == "true"
     grpc_secure = os.getenv("WEAVIATE_GRPC_SECURE", "false").lower() == "true"
