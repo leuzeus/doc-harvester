@@ -6,7 +6,7 @@ import json
 
 BASE_DIR = "/cache/repos"
 CACHE_FILE = "/cache/version_cache.json"
-CACHE_TTL = 365 * 24 * 3600  # 1 an
+CACHE_TTL = int(os.getenv("VERSION_CACHE_TTL", 365 * 24 * 3600))
 
 def _load_cache():
     try:
