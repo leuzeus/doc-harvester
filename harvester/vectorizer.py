@@ -8,12 +8,21 @@ from tqdm import tqdm
 _client = None
 
 def _init_client():
-    weaviate_url = os.environ.get("WEAVIATE_URL")
-    if not weaviate_url:
-        raise ValueError("WEAVIATE_URL not set")
-    conn = ConnectionParams.from_url(weaviate_url, grpc_port=50051)
+    # extraire les variables d’environnement
+    http_host = os.getenv("WEAVIATE_HOST", "weaviate")
+    http_port = int(os.getenv("WEAVIATE_PORT", 8080))
+    grpc_host = os.getenv("WEAVIATE_GRPC_HOST", http_host)
+    grpc_port = int(os.getenv("WEAVIATE_GRPC_PORT", 50051))
+
+    conn = ConnectionParams(
+        http_host=http_host,
+        http_port=http_port,
+        grpc_host=grpc_host,
+        grpc_port=grpc_port,
+        # selon besoin tu peux mettre secure flags
+        # grpc_secure = False, http_secure = False, etc.
+    )
     client = WeaviateClient(conn, skip_init_checks=False)
-    # établir la connexion
     client.connect()
     return client
 
