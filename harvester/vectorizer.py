@@ -46,7 +46,6 @@ def get_client():
     return _client
 
 
-# URL de l’API embedder (Ollama ou autre)
 OLLAMA_URL = os.getenv("EMBEDDER_URL", "http://ollama:11434/api/embeddings")
 MODEL_NAME = os.getenv("MODEL_NAME", "nomic-embed-text")
 
@@ -55,7 +54,7 @@ def push_to_weaviate(docs, lang, version):
     client = get_client()
     print(f"DEBUG: Starting push_to_weaviate, lang={lang}, version={version}, num_docs={len(docs)}")
 
-    # Vérifie la version serveur pour diagnostic
+    # Vérifier version serveur (optionnel)
     try:
         meta = requests.get(f"http://{os.getenv('WEAVIATE_HOST', 'weaviate')}:8080/v1/meta").json()
         print(f"DEBUG: Connected to Weaviate server version {meta.get('version')}")
@@ -67,7 +66,10 @@ def push_to_weaviate(docs, lang, version):
             for i, doc in enumerate(docs):
                 print(f"DEBUG: Processing doc #{i}: source={doc.get('source')}, text_len={len(doc.get('text', ''))}")
 
-                payload = {"model": MODEL_NAME, "input": doc["text"][:8000]}
+                payload = {
+                    "model": MODEL_NAME,
+                    "input": doc["text"][:8000]
+                }
                 try:
                     r = requests.post(OLLAMA_URL, json=payload)
                     r.raise_for_status()
@@ -76,6 +78,7 @@ def push_to_weaviate(docs, lang, version):
                     if not isinstance(embedding, list):
                         print(f"ERROR: embedding invalid for {doc.get('source')} (type={type(embedding)}), skipping")
                         continue
+
                     print(f"DEBUG: embedding length={len(embedding)}")
                 except Exception as e:
                     print(f"ERROR: embedding request failed for {doc.get('source')}: {e}")
@@ -103,8 +106,12 @@ def push_to_weaviate(docs, lang, version):
         client = _init_client()
         with client.batch.dynamic() as batch:
             for i, doc in enumerate(docs):
+                print(f"DEBUG RETRY: Processing doc #{i}: source={doc.get('source')}")
+                payload = {
+                    "model": MODEL_NAME,
+                    "input": doc["text"][:8000]
+                }
                 try:
-                    payload = {"model": MODEL_NAME, "input": doc["text"][:8000]}
                     r = requests.post(OLLAMA_URL, json=payload)
                     r.raise_for_status()
                     embedding = r.json().get("embedding")
@@ -112,9 +119,22 @@ def push_to_weaviate(docs, lang, version):
                     if not isinstance(embedding, list):
                         print(f"ERROR RETRY: invalid embedding for {doc.get('source')}, skipping")
                         continue
+                except Exception as e2:
+                    print(f"ERROR RETRY: embedding failed for {doc.get('source')}: {e2}")
+                    continue
 
+                properties = {
+                    "text": doc["text"],
+                    "lang": lang,
+                    "version": version,
+                    "source": doc.get("source")
+                }
+                try:
                     batch.add_object(
                         collection="Documentation",
-                        properties={
-                            "text": doc["text"],
-                            "lang": lang,
+                        properties=properties,
+                        vector=embedding
+                    )
+                    print(f"DEBUG RETRY: added {doc.get('source')}")
+                except Exception as e2:
+                    print(f"ERROR RETRY: failed for {doc.get('source')}: {e2}")
