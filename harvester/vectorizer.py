@@ -8,7 +8,6 @@ from tqdm import tqdm
 _client = None
 
 def _init_client():
-    # Lecture des variables d’environnement
     http_host = os.getenv("WEAVIATE_HOST", "weaviate")
     http_port = int(os.getenv("WEAVIATE_PORT", 8080))
     grpc_host = http_host
@@ -33,52 +32,69 @@ def get_client():
     if _client is None:
         _client = _init_client()
     else:
-        # vérification de connexion
         try:
             _client.is_ready()
-        except Exception:
+        except Exception as e:
+            print(f"DEBUG: client.is_ready() raised {e}, reconnecting client")
             try:
                 _client.connect()
-            except Exception:
+            except Exception as e2:
+                print(f"DEBUG: reconnect failed: {e2}, reinitializing client")
                 _client = _init_client()
     return _client
 
-OLLAMA_URL = os.getenv("EMBEDDER_URL", "http://192.168.1.156:11535/api/embeddings")
+OLLAMA_URL = os.getenv("EMBEDDER_URL", "http://127.0.0.1:11434/api/embeddings")
 MODEL_NAME = os.getenv("MODEL_NAME", "nomic-embed-text")
 
 def push_to_weaviate(docs, lang, version):
     client = get_client()
+    print(f"DEBUG: Starting push_to_weaviate, lang={lang}, version={version}, num_docs={len(docs)}")
+
     try:
         with client.batch.dynamic() as batch:
-            for doc in tqdm(docs, desc=f"Ingesting {lang}@{version}"):
-                payload = {"model": MODEL_NAME, "input": doc["text"][:8000]}
+            for i, doc in enumerate(docs):
+                # Log du document
+                print(f"DEBUG: Processing doc #{i}: source={doc.get('source')}, text_len={len(doc.get('text',''))}")
+
+                payload = {
+                    "model": MODEL_NAME,
+                    "input": doc["text"][:8000]
+                }
                 try:
                     r = requests.post(OLLAMA_URL, json=payload)
                     r.raise_for_status()
                     embedding = r.json().get("embedding")
+                    print(f"DEBUG: Received embedding type {type(embedding)}, length {len(embedding) if embedding else None}")
                     if embedding is None:
+                        print("DEBUG: embedding is None, skipping this doc")
                         continue
                 except Exception as e:
-                    print(f"Embedding failed for {doc.get('source')}: {e}")
+                    print(f"ERROR: embedding request failed for {doc.get('source')}: {e}")
                     continue
 
                 properties = {
                     "text": doc["text"],
                     "lang": lang,
                     "version": version,
-                    "source": doc.get("source"),
+                    "source": doc.get("source")
                 }
+                print(f"DEBUG: Adding object with properties: {properties}")
+
                 try:
                     batch.add_object(properties=properties, class_name="Documentation", vector=embedding)
                 except Exception as e:
-                    print(f"Weaviate insertion failed for {doc.get('source')}: {e}")
-                    continue
-    except WeaviateClosedClientError:
-        # En cas de client fermé, réinitialiser et réessayer
+                    print(f"ERROR: batch.add_object failed for {doc.get('source')}: {e}")
+
+    except WeaviateClosedClientError as e:
+        print(f"ERROR: Weaviate client closed: {e}, retrying a new client")
         client = _init_client()
         with client.batch.dynamic() as batch:
-            for doc in tqdm(docs, desc=f"Ingesting {lang}@{version} [retry]"):
-                payload = {"model": MODEL_NAME, "input": doc["text"][:8000]}
+            for i, doc in enumerate(docs):
+                print(f"DEBUG RETRY: Processing doc #{i}: source={doc.get('source')}")
+                payload = {
+                    "model": MODEL_NAME,
+                    "input": doc["text"][:8000]
+                }
                 try:
                     r = requests.post(OLLAMA_URL, json=payload)
                     r.raise_for_status()
@@ -86,17 +102,16 @@ def push_to_weaviate(docs, lang, version):
                     if embedding is None:
                         continue
                 except Exception as e:
-                    print(f"Embedding failed (retry) for {doc.get('source')}: {e}")
+                    print(f"ERROR RETRY: embedding failed for {doc.get('source')}: {e}")
                     continue
 
                 properties = {
                     "text": doc["text"],
                     "lang": lang,
                     "version": version,
-                    "source": doc.get("source"),
+                    "source": doc.get("source")
                 }
                 try:
                     batch.add_object(properties=properties, class_name="Documentation", vector=embedding)
                 except Exception as e:
-                    print(f"Weaviate insertion failed (retry) for {doc.get('source')}: {e}")
-                    continue
+                    print(f"ERROR RETRY: batch.add_object failed for {doc.get('source')}: {e}")
