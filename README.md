@@ -12,7 +12,7 @@ docker compose up -d
 ```bash
 curl "http://your_ip:8090/fetch?lang=go&version=go1.22.3"
 curl "http://your_ip:8090/fetch?lang=php&version=php-8.3"
-``
+```
 
 🔍 Vérification via Weaviate
 ```bash
