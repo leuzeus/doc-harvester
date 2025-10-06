@@ -1,0 +1,28 @@
+version: "3.9"
+services:
+  weaviate:
+    image: semitechnologies/weaviate:latest
+    ports:
+      - "8080:8080"
+    environment:
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: "true"
+      ENABLE_MODULES: "text2vec-transformers"
+      PERSISTENCE_DATA_PATH: /var/lib/weaviate
+    volumes:
+      - weaviate_data:/var/lib/weaviate
+    restart: unless-stopped
+
+  doc-harvester:
+    build: ./doc-harvester
+    environment:
+      WEAVIATE_URL: http://weaviate:8080
+      EMBEDDER_URL: http://192.168.1.156:11535/api/embeddings
+      MODEL_NAME: nomic-embed-text
+    ports:
+      - "8090:8090"
+    volumes:
+      - ./cache:/cache
+    restart: unless-stopped
+
+volumes:
+  weaviate_data:
