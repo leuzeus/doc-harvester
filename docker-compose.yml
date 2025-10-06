@@ -10,6 +10,7 @@ services:
       PERSISTENCE_DATA_PATH: /var/lib/weaviate
       # Désactive les modules ou ne pas inclure text2vec-transformers
       ENABLE_MODULES: ""
+      DISABLE_TELEMETRY: "true"
       DEFAULT_VECTORIZER_MODULE: "none"
       # Ne pas définir TRANSFORMERS_INFERENCE_API
       CLUSTER_HOSTNAME: "node1"
