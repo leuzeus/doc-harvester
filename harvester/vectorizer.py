@@ -11,7 +11,7 @@ def _init_client():
     # extraire les variables d’environnement
     http_host = os.getenv("WEAVIATE_HOST", "weaviate")
     http_port = int(os.getenv("WEAVIATE_PORT", 8080))
-    grpc_host = os.getenv("WEAVIATE_GRPC_HOST", http_host)
+    grpc_host = http_host
     grpc_port = int(os.getenv("WEAVIATE_GRPC_PORT", 50051))
 
     conn = ConnectionParams(
