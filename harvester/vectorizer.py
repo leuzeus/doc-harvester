@@ -2,7 +2,7 @@ import os
 import requests
 from weaviate import WeaviateClient
 from weaviate.connect import ConnectionParams
-from weaviate.exceptions import WeaviateClientClosedError
+from weaviate.exceptions import WeaviateClosedClientError
 from tqdm import tqdm
 
 _client = None
@@ -73,7 +73,7 @@ def push_to_weaviate(docs, lang, version):
                 except Exception as e:
                     print(f"Weaviate insertion failed for {doc.get('source')}: {e}")
                     continue
-    except WeaviateClientClosedError:
+    except WeaviateClosedClientError:
         # si le client est fermé, on reconnecte et réessaye
         client = _init_client()
         with client.batch.dynamic() as batch:
