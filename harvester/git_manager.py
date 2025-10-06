@@ -91,9 +91,15 @@ def list_versions(lang, limit=10):
         if v not in ordered:
             ordered.append(v)
 
-    cache[lang] = {"ts": now, "versions": ordered}
+    # On veut que les derniers tags apparaissent en premier : inverser l’ordre des “autres”
+    base = [v for v in ordered if v in ("main", "master")]
+    rest = [v for v in ordered if v not in ("main", "master")]
+    rest.reverse()
+    final = base + rest
+
+    cache[lang] = {"ts": now, "versions": final}
     _save_cache(cache)
-    return ordered[:limit]
+    return final[:limit]
 
 def clone_repo(lang, version):
     with open("/app/harvester/sources.yaml") as f:
