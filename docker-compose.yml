@@ -31,7 +31,7 @@ services:
       WEAVIATE_URL: http://weaviate:8080
       EMBEDDER_URL: http://127.0.0.1:11434/api/embeddings
       MODEL_NAME: nomic-embed-text
-      VERSION_CACHE_TTL: 0
+      VERSION_CACHE_TTL: 60
     volumes:
       - ./cache:/cache
     restart: unless-stopped
