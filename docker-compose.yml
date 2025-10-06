@@ -7,8 +7,12 @@ services:
         ipv4_address: ${WEAVIATE_IP}
     environment:
       AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: "true"
-      ENABLE_MODULES: "text2vec-transformers"
       PERSISTENCE_DATA_PATH: /var/lib/weaviate
+      # Désactive les modules ou ne pas inclure text2vec-transformers
+      ENABLE_MODULES: ""
+      DEFAULT_VECTORIZER_MODULE: "none"
+      # Ne pas définir TRANSFORMERS_INFERENCE_API
+      CLUSTER_HOSTNAME: "node1"
     volumes:
       - weaviate_data:/var/lib/weaviate
     restart: unless-stopped
