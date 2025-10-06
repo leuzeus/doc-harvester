@@ -1,6 +1,7 @@
 # 🧠 Doc Harvester (Weaviate + Ollama)
 
 Service local (usage personnel) pour télécharger, parser et indexer automatiquement les documentations versionnées (Go, TinyGo, PHP, React).
+Je n'expose pas les ports car je n'utilise mes services que dans un réseau isolé accessible aux services qui va l'utiliser. De ce service je peux stream ou consommé les services.
 
 ## 🚀 Démarrage
 
@@ -27,3 +28,11 @@ Pour le choix du modèles à télécharger dans ollama
 | ⚡ Ingestion rapide, RAG local      | **`nomic-embed-text`**   | 120 MB | ~0.1 s        | ✅ Idéal             |
 | 📚 Contexte riche, recherche fine  | `mxbai-embed-large`      | 1.2 GB | ~1 s          | Pour docs complexes |
 | 🧪 Expérimental, technique         | `snowflake-arctic-embed` | 1 GB   | ~0.8 s        | Bon mix             |
+
+💡 Pourquoi les ports ne sont pas exposés
+
+Les ports ne sont pas exposés, car les services tournent dans un réseau Docker isolé.
+Seuls les autres conteneurs du même réseau y ont accès, ce qui évite d’ouvrir inutilement des ports vers l’extérieur et garde la stack plus simple.
+
+Depuis ce réseau, un service peut streamer ou consommer les autres sans problème.
+N’hésitez pas à adapter cette approche selon votre infrastructure ou vos besoins d’accès.
