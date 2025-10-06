@@ -34,6 +34,5 @@ networks:
   main_network:
     external: true
     name: ${MAIN_NETWORK_NAME}
-
-  extra_network:
+  internet:
     driver: bridge
