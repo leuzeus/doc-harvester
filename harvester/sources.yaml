@@ -1,27 +1,15 @@
 go:
   repo: "https://github.com/golang/go.git"
   path: "doc"
-  versions:
-    - "go1.22.3"
-    - "go1.21.10"
 
 tinygo:
   repo: "https://github.com/tinygo-org/tinygo.git"
   path: "src/runtime"
-  versions:
-    - "v0.32.0"
-    - "v0.31.2"
 
 php:
   repo: "https://github.com/php/doc-en.git"
   path: "en"
-  versions:
-    - "php-8.3"
-    - "php-8.2"
 
 react:
   repo: "https://github.com/reactjs/react.dev.git"
   path: "src/content"
-  versions:
-    - "main"
-    - "v18"
