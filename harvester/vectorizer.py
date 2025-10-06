@@ -8,19 +8,21 @@ from tqdm import tqdm
 _client = None
 
 def _init_client():
-    # extraire les variables d’environnement
+    # Lecture des variables d’environnement
     http_host = os.getenv("WEAVIATE_HOST", "weaviate")
     http_port = int(os.getenv("WEAVIATE_PORT", 8080))
-    grpc_host = http_host
+    grpc_host = http_hos
     grpc_port = int(os.getenv("WEAVIATE_GRPC_PORT", 50051))
+    http_secure = os.getenv("WEAVIATE_HTTP_SECURE", "false").lower() == "true"
+    grpc_secure = os.getenv("WEAVIATE_GRPC_SECURE", "false").lower() == "true"
 
-    conn = ConnectionParams(
+    conn = ConnectionParams.from_params(
         http_host=http_host,
         http_port=http_port,
+        http_secure=http_secure,
         grpc_host=grpc_host,
         grpc_port=grpc_port,
-        # selon besoin tu peux mettre secure flags
-        # grpc_secure = False, http_secure = False, etc.
+        grpc_secure=grpc_secure
     )
     client = WeaviateClient(conn, skip_init_checks=False)
     client.connect()
@@ -31,19 +33,17 @@ def get_client():
     if _client is None:
         _client = _init_client()
     else:
-        # tenter de vérifier l’état
+        # vérification de connexion
         try:
-            # is_ready() est une méthode légère de contrôle (ou une autre méthode selon version)
             _client.is_ready()
         except Exception:
             try:
                 _client.connect()
             except Exception:
-                # recréer client si nécessaire
                 _client = _init_client()
     return _client
 
-OLLAMA_URL = os.getenv("EMBEDDER_URL", "http://127.0.0.1:11434/api/embeddings")
+OLLAMA_URL = os.getenv("EMBEDDER_URL", "http://192.168.1.156:11535/api/embeddings")
 MODEL_NAME = os.getenv("MODEL_NAME", "nomic-embed-text")
 
 def push_to_weaviate(docs, lang, version):
@@ -74,7 +74,7 @@ def push_to_weaviate(docs, lang, version):
                     print(f"Weaviate insertion failed for {doc.get('source')}: {e}")
                     continue
     except WeaviateClosedClientError:
-        # si le client est fermé, on reconnecte et réessaye
+        # En cas de client fermé, réinitialiser et réessayer
         client = _init_client()
         with client.batch.dynamic() as batch:
             for doc in tqdm(docs, desc=f"Ingesting {lang}@{version} [retry]"):
