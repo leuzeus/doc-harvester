@@ -41,6 +41,6 @@ networks:
   main_network:
     external: true
     name: ${MAIN_NETWORK_NAME}
-harvester_internet:
+  harvester_internet:
     driver: bridge
     internal: false
