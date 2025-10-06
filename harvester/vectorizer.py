@@ -7,7 +7,6 @@ from tqdm import tqdm
 
 _client = None
 
-
 def _init_client():
     http_host = os.getenv("WEAVIATE_HOST", "weaviate")
     http_port = int(os.getenv("WEAVIATE_PORT", 8080))
@@ -28,7 +27,6 @@ def _init_client():
     client.connect()
     return client
 
-
 def get_client():
     global _client
     if _client is None:
@@ -45,16 +43,14 @@ def get_client():
                 _client = _init_client()
     return _client
 
-
 OLLAMA_URL = os.getenv("EMBEDDER_URL", "http://ollama:11434/api/embeddings")
 MODEL_NAME = os.getenv("MODEL_NAME", "nomic-embed-text")
-
 
 def push_to_weaviate(docs, lang, version):
     client = get_client()
     print(f"DEBUG: Starting push_to_weaviate, lang={lang}, version={version}, num_docs={len(docs)}")
 
-    # Vérifier version serveur (optionnel)
+    # Vérifier version du serveur pour debug
     try:
         meta = requests.get(f"http://{os.getenv('WEAVIATE_HOST', 'weaviate')}:8080/v1/meta").json()
         print(f"DEBUG: Connected to Weaviate server version {meta.get('version')}")
@@ -75,8 +71,8 @@ def push_to_weaviate(docs, lang, version):
                     r.raise_for_status()
                     embedding = r.json().get("embedding")
 
-                    if not isinstance(embedding, list):
-                        print(f"ERROR: embedding invalid for {doc.get('source')} (type={type(embedding)}), skipping")
+                    if not isinstance(embedding, list) or len(embedding) == 0:
+                        print(f"ERROR: invalid embedding for {doc.get('source')}: {embedding}")
                         continue
 
                     print(f"DEBUG: embedding length={len(embedding)}")
@@ -101,6 +97,15 @@ def push_to_weaviate(docs, lang, version):
                 except Exception as e:
                     print(f"ERROR: batch.add_object failed for {doc.get('source')}: {e}")
 
+            # Fin de la boucle — après avoir ajouté tous les objets possibles
+
+        # À ce moment, le contexte batch est sorti / fermé
+        # Vérifie les objets échoués
+        if hasattr(batch, "failed_objects"):
+            failed = batch.failed_objects
+            if failed:
+                print("Batch failed objects:", failed)
+
     except WeaviateClosedClientError as e:
         print(f"ERROR: Weaviate client closed: {e}, retrying with new client")
         client = _init_client()
@@ -116,8 +121,8 @@ def push_to_weaviate(docs, lang, version):
                     r.raise_for_status()
                     embedding = r.json().get("embedding")
 
-                    if not isinstance(embedding, list):
-                        print(f"ERROR RETRY: invalid embedding for {doc.get('source')}, skipping")
+                    if not isinstance(embedding, list) or len(embedding) == 0:
+                        print(f"ERROR RETRY: invalid embedding for {doc.get('source')}: {embedding}")
                         continue
                 except Exception as e2:
                     print(f"ERROR RETRY: embedding failed for {doc.get('source')}: {e2}")
@@ -138,3 +143,9 @@ def push_to_weaviate(docs, lang, version):
                     print(f"DEBUG RETRY: added {doc.get('source')}")
                 except Exception as e2:
                     print(f"ERROR RETRY: failed for {doc.get('source')}: {e2}")
+
+        # Après retry, tu peux aussi vérifier batch.failed_objects du retry
+        if hasattr(batch, "failed_objects"):
+            failed = batch.failed_objects
+            if failed:
+                print("Retry batch failed objects:", failed)
