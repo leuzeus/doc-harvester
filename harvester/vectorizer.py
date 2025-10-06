@@ -64,7 +64,7 @@ def push_to_weaviate(docs, lang, version):
 
                 payload = {
                     "model": MODEL_NAME,
-                    "input": doc["text"][:8000]
+                    "prompt": doc["text"][:8000]
                 }
                 try:
                     r = requests.post(OLLAMA_URL, json=payload)
@@ -114,7 +114,7 @@ def push_to_weaviate(docs, lang, version):
                 print(f"DEBUG RETRY: Processing doc #{i}: source={doc.get('source')}")
                 payload = {
                     "model": MODEL_NAME,
-                    "input": doc["text"][:8000]
+                    "prompt": doc["text"][:8000]
                 }
                 try:
                     r = requests.post(OLLAMA_URL, json=payload)
