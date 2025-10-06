@@ -2,24 +2,26 @@ go:
   repo: "https://github.com/golang/go.git"
   path: "doc"
   ignore_branches: true
-  # filtre : seuls les tags “goX.Y” ou “goX.Y.Z”
+  # filtre regex pour versions stables
   version_filter: "^go\\d+\\.\\d+(?:\\.\\d+)?$"
+  # préfixe à retirer pour le tri / parsing
+  version_prefix: "go"
 
 tinygo:
   repo: "https://github.com/tinygo-org/tinygo.git"
   path: "src/runtime"
   ignore_branches: true
-  # filtre pour “vX.Y.Z” ou tags réguliers
   version_filter: "^(?:v?\\d+\\.\\d+\\.\\d+)$"
+  version_prefix: "v"   # ou "" si pas de préfixe
 
 php:
   repo: "https://github.com/php/doc-en.git"
   path: "en"
   ignore_branches: true
-  version_filter: "^php-\\d+\\.\\d+$"   # ex : php-8.3
+  version_filter: "^php-\\d+\\.\\d+$"
+  version_prefix: "php-"
 
 react:
   repo: "https://github.com/reactjs/react.dev.git"
   path: "src/content"
-  # ici on accepte branches / tags, pas de filtre
-  # version_filter absent = pas de filtre
+  # pas de version_filter ou version_prefix => pas de retrait du préfixe
