@@ -20,7 +20,7 @@ curl -X POST "http://localhost:8080/v1/graphql" -H "Content-Type: application/js
 -d '{"query":"{ Get { Documentation(where:{operator:Equal, path:[\"lang\"], valueString:\"go\"}) { text sour
 ```
 
-Pour les modèles à télécharger dans ollama
+Pour le choix du modèles à télécharger dans ollama
 
 | Cas d’usage                        | Modèle                   | Taille | Temps / chunk | Commentaire         |
 | ---------------------------------- | ------------------------ | ------ | ------------- | ------------------- |
