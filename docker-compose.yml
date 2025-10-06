@@ -28,7 +28,9 @@ services:
         ipv4_address: ${HARVESTER_IP}
       harvester_internet:
     environment:
-      WEAVIATE_URL: http://weaviate:8080
+      WEAVIATE_HOST: weaviate
+      WEAVIATE_PORT: 8080
+      WEAVIATE_GRPC_PORT: 50051
       EMBEDDER_URL: http://127.0.0.1:11434/api/embeddings
       MODEL_NAME: nomic-embed-text
       VERSION_CACHE_TTL: 60
