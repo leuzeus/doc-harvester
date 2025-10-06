@@ -17,7 +17,6 @@ services:
     networks:
       main_network:
         ipv4_address: ${HARVESTER_IP}
-      internet:
     environment:
       WEAVIATE_URL: http://weaviate:8080
       EMBEDDER_URL: http://127.0.0.1:11434/api/embeddings
@@ -34,5 +33,3 @@ networks:
   main_network:
     external: true
     name: ${MAIN_NETWORK_NAME}
-  internet:
-    driver: bridge
