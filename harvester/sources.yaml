@@ -1,15 +1,19 @@
 go:
   repo: "https://github.com/golang/go.git"
   path: "doc"
+  ignore_branches: true
 
 tinygo:
   repo: "https://github.com/tinygo-org/tinygo.git"
   path: "src/runtime"
+  ignore_branches: false
 
 php:
   repo: "https://github.com/php/doc-en.git"
   path: "en"
+  ignore_branches: true
 
 react:
   repo: "https://github.com/reactjs/react.dev.git"
   path: "src/content"
+  ignore_branches: false
