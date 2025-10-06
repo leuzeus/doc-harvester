@@ -14,6 +14,10 @@ services:
 
   doc-harvester:
     build: ./
+    networks:
+      main_network:
+        ipv4_address: ${HARVESTER_IP}
+      internet:
     environment:
       WEAVIATE_URL: http://weaviate:8080
       EMBEDDER_URL: http://127.0.0.1:11434/api/embeddings
@@ -26,3 +30,10 @@ services:
 
 volumes:
   weaviate_data:
+networks:
+  main_network:
+    external: true
+    name: ${MAIN_NETWORK_NAME}
+
+  extra_network:
+    driver: bridge
