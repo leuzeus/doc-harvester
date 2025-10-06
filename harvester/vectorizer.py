@@ -43,7 +43,7 @@ def get_client():
                 _client = _init_client()
     return _client
 
-OLLAMA_URL = os.getenv("EMBEDDER_URL", "http://127.0.0.1:11434/api/embeddings")
+OLLAMA_URL = os.getenv("EMBEDDER_URL", "http://ollama:11434/api/embeddings")
 MODEL_NAME = os.getenv("MODEL_NAME", "nomic-embed-text")
 
 def push_to_weaviate(docs, lang, version):
@@ -53,7 +53,6 @@ def push_to_weaviate(docs, lang, version):
     try:
         with client.batch.dynamic() as batch:
             for i, doc in enumerate(docs):
-                # Log du document
                 print(f"DEBUG: Processing doc #{i}: source={doc.get('source')}, text_len={len(doc.get('text',''))}")
 
                 payload = {
@@ -81,7 +80,7 @@ def push_to_weaviate(docs, lang, version):
                 print(f"DEBUG: Adding object with properties: {properties}")
 
                 try:
-                    batch.add_object(properties=properties, class_name="Documentation", vector=embedding)
+                    batch.add_object(properties=properties, vector=embedding, collection="Documentation")
                 except Exception as e:
                     print(f"ERROR: batch.add_object failed for {doc.get('source')}: {e}")
 
@@ -112,6 +111,6 @@ def push_to_weaviate(docs, lang, version):
                     "source": doc.get("source")
                 }
                 try:
-                    batch.add_object(properties=properties, class_name="Documentation", vector=embedding)
+                    batch.add_object(properties=properties, vector=embedding, collection="Documentation")
                 except Exception as e:
                     print(f"ERROR RETRY: batch.add_object failed for {doc.get('source')}: {e}")
