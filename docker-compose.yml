@@ -13,7 +13,7 @@ services:
     restart: unless-stopped
 
   doc-harvester:
-    build: ./doc-harvester
+    build: ./
     environment:
       WEAVIATE_URL: http://weaviate:8080
       EMBEDDER_URL: http://127.0.0.1:11434/api/embeddings
