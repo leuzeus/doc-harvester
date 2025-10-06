@@ -33,20 +33,32 @@ def list_versions(lang, limit=10):
     if entry and (now - entry.get("ts", 0) < CACHE_TTL):
         return entry.get("versions", [])[:limit]
 
-    # obtenir tags
-    res_tags = subprocess.run(
-        ["git", "ls-remote", "--refs", "--tags", repo],
-        capture_output=True, text=True, check=True
-    ).stdout.strip().splitlines()
-    # obtenir branches (heads)
-    res_heads = subprocess.run(
-        ["git", "ls-remote", "--heads", repo],
-        capture_output=True, text=True, check=True
-    ).stdout.strip().splitlines()
+    # Debug : exécution brute
+    try:
+        res_tags = subprocess.run(
+            ["git", "ls-remote", "--refs", "--tags", repo],
+            capture_output=True, text=True
+        )
+    except Exception as e:
+        raise RuntimeError(f"git ls-remote tags failed: {e}")
+    print("DEBUG tags stdout:", res_tags.stdout)
+    print("DEBUG tags stderr:", res_tags.stderr)
+
+    try:
+        res_heads = subprocess.run(
+            ["git", "ls-remote", "--heads", repo],
+            capture_output=True, text=True
+        )
+    except Exception as e:
+        raise RuntimeError(f"git ls-remote heads failed: {e}")
+    print("DEBUG heads stdout:", res_heads.stdout)
+    print("DEBUG heads stderr:", res_heads.stderr)
+
+    tags_lines = res_tags.stdout.strip().splitlines()
+    heads_lines = res_heads.stdout.strip().splitlines()
 
     versions = []
-    # parse tags
-    for line in res_tags:
+    for line in tags_lines:
         parts = line.split()
         if len(parts) < 2:
             continue
@@ -54,8 +66,8 @@ def list_versions(lang, limit=10):
         if ref.startswith("refs/tags/"):
             tag = ref[len("refs/tags/"):]
             versions.append(tag)
-    # parse branches
-    for line in res_heads:
+
+    for line in heads_lines:
         parts = line.split()
         if len(parts) < 2:
             continue
@@ -70,7 +82,7 @@ def list_versions(lang, limit=10):
         if v not in unique:
             unique.append(v)
 
-    # prioriser “main” / “master” s’ils existent
+    # prioriser main / master
     ordered = []
     for b in ["main", "master"]:
         if b in unique:
