@@ -20,6 +20,9 @@ services:
 
   doc-harvester:
     build: ./
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     networks:
       main_network:
         ipv4_address: ${HARVESTER_IP}
