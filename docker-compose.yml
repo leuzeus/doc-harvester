@@ -16,7 +16,7 @@ services:
     build: ./doc-harvester
     environment:
       WEAVIATE_URL: http://weaviate:8080
-      EMBEDDER_URL: http://192.168.1.156:11535/api/embeddings
+      EMBEDDER_URL: http://127.0.0.1:11434/api/embeddings
       MODEL_NAME: nomic-embed-text
     ports:
       - "8090:8090"
