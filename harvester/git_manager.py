@@ -26,6 +26,7 @@ def list_versions(lang, limit=10):
     if lang not in sources:
         raise ValueError(f"Unsupported language: {lang}")
     repo = sources[lang]["repo"]
+    ignore_branches = sources[lang].get("ignore_branches", False)
 
     cache = _load_cache()
     entry = cache.get(lang)
@@ -33,29 +34,15 @@ def list_versions(lang, limit=10):
     if entry and (now - entry.get("ts", 0) < CACHE_TTL):
         return entry.get("versions", [])[:limit]
 
-    # Debug : exécution brute
-    try:
-        res_tags = subprocess.run(
-            ["git", "ls-remote", "--refs", "--tags", repo],
-            capture_output=True, text=True
-        )
-    except Exception as e:
-        raise RuntimeError(f"git ls-remote tags failed: {e}")
+    # récupérer les tags
+    res_tags = subprocess.run(
+        ["git", "ls-remote", "--refs", "--tags", repo],
+        capture_output=True, text=True
+    )
+    # debug
     print("DEBUG tags stdout:", res_tags.stdout)
     print("DEBUG tags stderr:", res_tags.stderr)
-
-    try:
-        res_heads = subprocess.run(
-            ["git", "ls-remote", "--heads", repo],
-            capture_output=True, text=True
-        )
-    except Exception as e:
-        raise RuntimeError(f"git ls-remote heads failed: {e}")
-    print("DEBUG heads stdout:", res_heads.stdout)
-    print("DEBUG heads stderr:", res_heads.stderr)
-
     tags_lines = res_tags.stdout.strip().splitlines()
-    heads_lines = res_heads.stdout.strip().splitlines()
 
     versions = []
     for line in tags_lines:
@@ -67,31 +54,42 @@ def list_versions(lang, limit=10):
             tag = ref[len("refs/tags/"):]
             versions.append(tag)
 
-    for line in heads_lines:
-        parts = line.split()
-        if len(parts) < 2:
-            continue
-        ref = parts[1]
-        if ref.startswith("refs/heads/"):
-            branch = ref[len("refs/heads/"):]
-            versions.append(branch)
+    # si on n’ignore pas les branches, on les ajoutera
+    if not ignore_branches:
+        res_heads = subprocess.run(
+            ["git", "ls-remote", "--heads", repo],
+            capture_output=True, text=True
+        )
+        print("DEBUG heads stdout:", res_heads.stdout)
+        print("DEBUG heads stderr:", res_heads.stderr)
+        heads_lines = res_heads.stdout.strip().splitlines()
+        for line in heads_lines:
+            parts = line.split()
+            if len(parts) < 2:
+                continue
+            ref = parts[1]
+            if ref.startswith("refs/heads/"):
+                branch = ref[len("refs/heads/"):]
+                versions.append(branch)
 
-    # unique (conserver premier apparition)
+    # unique
     unique = []
     for v in versions:
         if v not in unique:
             unique.append(v)
 
-    # prioriser main / master
+    # prioriser main/master si branches non ignorées
     ordered = []
-    for b in ["main", "master"]:
-        if b in unique:
-            ordered.append(b)
+    if not ignore_branches:
+        for b in ["main", "master"]:
+            if b in unique:
+                ordered.append(b)
+    # puis le reste (dont tags et branches selon le cas)
     for v in unique:
         if v not in ordered:
             ordered.append(v)
 
-    # On veut que les derniers tags apparaissent en premier : inverser l’ordre des “autres”
+    # inverser l’ordre des versions pour avoir les plus récents en premier (hors main/master)
     base = [v for v in ordered if v in ("main", "master")]
     rest = [v for v in ordered if v not in ("main", "master")]
     rest.reverse()
