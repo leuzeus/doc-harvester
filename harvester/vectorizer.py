@@ -2,7 +2,7 @@ import os, requests, weaviate
 from tqdm import tqdm
 
 client = weaviate.Client(os.environ["WEAVIATE_URL"])
-OLLAMA_URL = os.getenv("EMBEDDER_URL", "http://192.168.1.156:11535/api/embeddings")
+OLLAMA_URL = os.getenv("EMBEDDER_URL", "http://127.0.0.1:11434/api/embeddings")
 MODEL_NAME = os.getenv("MODEL_NAME", "nomic-embed-text")
 
 def push_to_weaviate(docs, lang, version):
