@@ -2,14 +2,11 @@ import os
 from pathlib import Path
 import re
 
-MAX_CHUNK_SIZE = 20000  # limite taille d’un chunk
+MAX_CHUNK_SIZE = 20000
 
 def sanitize_text(text: str) -> str:
-    # enlever les caractères non imprimables
     text = ''.join(ch for ch in text if ch.isprintable() or ch in "\n\t")
-    # remplacer plusieurs espaces
     text = re.sub(r"[ \t]{2,}", " ", text)
-    # optionnel : retirer les blocs HTML ou scripts (simple heuristique)
     text = re.sub(r"<[^>]+>", "", text)
     return text.strip()
 
@@ -26,11 +23,9 @@ def extract_docs(repo_path):
                 text = sanitize_text(raw)
                 if len(text) < 50:
                     continue
-                # éventuellement découper en chunks
-                # si trop long
                 if len(text) > MAX_CHUNK_SIZE:
                     for i in range(0, len(text), MAX_CHUNK_SIZE):
-                        docs.append({"text": text[i:i+MAX_CHUNK_SIZE], "source": str(path)})
+                        docs.append({"text": text[i : i + MAX_CHUNK_SIZE], "source": str(path)})
                 else:
                     docs.append({"text": text, "source": str(path)})
     return docs
