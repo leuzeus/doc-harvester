@@ -65,8 +65,8 @@ def push_to_weaviate(docs, lang, version):
                     r.raise_for_status()
                     embedding = r.json().get("embedding")
                     print(f"DEBUG: Received embedding type={type(embedding)}, length={len(embedding) if embedding else None}")
-                    if embedding is None:
-                        print("DEBUG: embedding is None, skipping this doc")
+                    if not isinstance(embedding, list):
+                        print("ERROR: embedding is invalid (not a list), skipping this doc")
                         continue
                 except Exception as e:
                     print(f"ERROR: embedding request failed for {doc.get('source')}: {e}")
@@ -81,8 +81,12 @@ def push_to_weaviate(docs, lang, version):
                 print(f"DEBUG: Adding object with properties: {properties}")
 
                 try:
-                    # version v4 : utiliser collection= plutôt que class_name
-                    batch.add_object(properties=properties, vector=embedding, collection="Documentation")
+                    # ✅ Important : utiliser la bonne signature de la v4
+                    batch.add_object(
+                        properties=properties,
+                        vector=embedding,
+                        collection="Documentation"
+                    )
                 except Exception as e:
                     print(f"ERROR: batch.add_object failed for {doc.get('source')}: {e}")
 
@@ -100,7 +104,8 @@ def push_to_weaviate(docs, lang, version):
                     r = requests.post(OLLAMA_URL, json=payload)
                     r.raise_for_status()
                     embedding = r.json().get("embedding")
-                    if embedding is None:
+                    if not isinstance(embedding, list):
+                        print("ERROR RETRY: invalid embedding, skipping")
                         continue
                 except Exception as e2:
                     print(f"ERROR RETRY: embedding failed for {doc.get('source')}: {e2}")
@@ -113,6 +118,10 @@ def push_to_weaviate(docs, lang, version):
                     "source": doc.get("source")
                 }
                 try:
-                    batch.add_object(properties=properties, vector=embedding, collection="Documentation")
+                    batch.add_object(
+                        properties=properties,
+                        vector=embedding,
+                        collection="Documentation"
+                    )
                 except Exception as e2:
                     print(f"ERROR RETRY: batch.add_object failed for {doc.get('source')}: {e2}")
