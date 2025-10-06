@@ -1,7 +1,7 @@
 version: "3.9"
 services:
   weaviate:
-    image: semitechnologies/weaviate:latest
+    image: semitechnologies/weaviate:1.32.10
     networks:
       main_network:
         ipv4_address: ${WEAVIATE_IP}
