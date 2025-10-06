@@ -125,8 +125,16 @@ def clone_repo(lang, version):
         raise ValueError(f"Unsupported language: {lang}")
     repo = sources[lang]["repo"]
     path_in_repo = sources[lang].get("path", "")
+    version_prefix = sources[lang].get("version_prefix", "")
 
     allowed = list_versions(lang, limit=1000)
+
+    # Si l’utilisateur a passé la version sans préfixe, tenter de la réparer
+    if version_prefix and not version.startswith(version_prefix):
+        candidate = version_prefix + version
+        if candidate in allowed:
+            version = candidate
+
     if version == "latest":
         version = allowed[0] if allowed else version
     if version not in allowed:
@@ -141,3 +149,4 @@ def clone_repo(lang, version):
         )
 
     return os.path.join(target_dir, path_in_repo)
+
