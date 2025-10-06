@@ -3,6 +3,7 @@ import subprocess
 import yaml
 import time
 import json
+import re
 
 BASE_DIR = "/cache/repos"
 CACHE_FILE = "/cache/version_cache.json"
@@ -21,12 +22,14 @@ def _save_cache(cache):
         json.dump(cache, f)
 
 def list_versions(lang, limit=10):
+    # charger la config
     with open("/app/harvester/sources.yaml") as f:
         sources = yaml.safe_load(f)
     if lang not in sources:
         raise ValueError(f"Unsupported language: {lang}")
     repo = sources[lang]["repo"]
     ignore_branches = sources[lang].get("ignore_branches", False)
+    filter_regex = sources[lang].get("version_filter")  # peut être None
 
     cache = _load_cache()
     entry = cache.get(lang)
@@ -34,12 +37,11 @@ def list_versions(lang, limit=10):
     if entry and (now - entry.get("ts", 0) < CACHE_TTL):
         return entry.get("versions", [])[:limit]
 
-    # récupérer les tags
+    # récupération des refs
     res_tags = subprocess.run(
         ["git", "ls-remote", "--refs", "--tags", repo],
         capture_output=True, text=True
     )
-    # debug
     print("DEBUG tags stdout:", res_tags.stdout)
     print("DEBUG tags stderr:", res_tags.stderr)
     tags_lines = res_tags.stdout.strip().splitlines()
@@ -54,7 +56,6 @@ def list_versions(lang, limit=10):
             tag = ref[len("refs/tags/"):]
             versions.append(tag)
 
-    # si on n’ignore pas les branches, on les ajoutera
     if not ignore_branches:
         res_heads = subprocess.run(
             ["git", "ls-remote", "--heads", repo],
@@ -72,24 +73,33 @@ def list_versions(lang, limit=10):
                 branch = ref[len("refs/heads/"):]
                 versions.append(branch)
 
+    # si filtre défini, appliquer sur les noms
+    if filter_regex:
+        try:
+            cre = re.compile(filter_regex)
+            versions = [v for v in versions if cre.fullmatch(v)]
+        except re.error as e:
+            print(f"Invalid version_filter regex for '{lang}': {e}")
+            # en cas d’erreur regex, ne filtrer aucun
+            pass
+
     # unique
     unique = []
     for v in versions:
         if v not in unique:
             unique.append(v)
 
-    # prioriser main/master si branches non ignorées
+    # ordonner : donner priorité à main/master si branches autorisées
     ordered = []
     if not ignore_branches:
-        for b in ["main", "master"]:
+        for b in ("main", "master"):
             if b in unique:
                 ordered.append(b)
-    # puis le reste (dont tags et branches selon le cas)
     for v in unique:
         if v not in ordered:
             ordered.append(v)
 
-    # inverser l’ordre des versions pour avoir les plus récents en premier (hors main/master)
+    # inverser l’ordre des “autres”
     base = [v for v in ordered if v in ("main", "master")]
     rest = [v for v in ordered if v not in ("main", "master")]
     rest.reverse()
