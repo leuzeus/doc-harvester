@@ -2,18 +2,24 @@ go:
   repo: "https://github.com/golang/go.git"
   path: "doc"
   ignore_branches: true
+  # filtre : seuls les tags “goX.Y” ou “goX.Y.Z”
+  version_filter: "^go\\d+\\.\\d+(?:\\.\\d+)?$"
 
 tinygo:
   repo: "https://github.com/tinygo-org/tinygo.git"
   path: "src/runtime"
-  ignore_branches: false
+  ignore_branches: true
+  # filtre pour “vX.Y.Z” ou tags réguliers
+  version_filter: "^(?:v?\\d+\\.\\d+\\.\\d+)$"
 
 php:
   repo: "https://github.com/php/doc-en.git"
   path: "en"
   ignore_branches: true
+  version_filter: "^php-\\d+\\.\\d+$"   # ex : php-8.3
 
 react:
   repo: "https://github.com/reactjs/react.dev.git"
   path: "src/content"
-  ignore_branches: false
+  # ici on accepte branches / tags, pas de filtre
+  # version_filter absent = pas de filtre
