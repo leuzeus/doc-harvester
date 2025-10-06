@@ -1,6 +1,6 @@
 # 🧠 Doc Harvester (Weaviate + Ollama)
 
-Service local pour télécharger, parser et indexer automatiquement les documentations versionnées (Go, TinyGo, PHP, React).
+Service local (usage personnel) pour télécharger, parser et indexer automatiquement les documentations versionnées (Go, TinyGo, PHP, React).
 
 ## 🚀 Démarrage
 
