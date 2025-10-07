@@ -1,48 +1,34 @@
-# 🧠 Doc Harvester (Weaviate + Ollama)
+# Doc Harvester
 
-Service local (usage personnel) pour télécharger, parser et indexer automatiquement les documentations versionnées (Go, TinyGo, PHP, React).
+## Overview
+Doc Harvester downloads, parses, and indexes documentation sets so they can be queried through a vector database. It now ships with an admin interface to manage the source configurations without touching YAML files manually.
 
-## 🚀 Démarrage
+## Getting Started
+- **Docker workflow:** `docker compose up -d`
+- **Manual ingestion:**
+  - `curl "http://your_ip:8090/fetch?lang=go&version=1.22.3"`
+  - `curl "http://your_ip:8090/fetch?lang=php&version=8.3"`
 
-```bash
-docker compose up -d
-```
+## Admin Interface
+1. `pip install -r requirements.txt`
+2. `uvicorn main:app --reload --port 8000`
 
-📥 Ingestion d'une documentation
-```bash
-curl "http://your_ip:8090/fetch?lang=go&version=1.22.3"
-curl "http://your_ip:8090/fetch?lang=php&version=8.3"
-```
+The admin dashboard is available at `http://localhost:8000/admin` and provides full CRUD capabilities for the source catalog. Use the **Export Sources YAML** action (`POST /admin/export-sources-yaml`) to write the current configuration to `harvester/sources.yaml` and receive the YAML payload in the response.
 
-🔍 Vérification via Weaviate
-```bash
-curl -X POST "http://your_ip_2:8080/v1/graphql" -H "Content-Type: application/json" \
--d '{"query":"{ Get { Documentation(where:{operator:Equal, path:[\"lang\"], valueString:\"go\"}) { text sour
-```
+## API Endpoints
+- `GET /versions?lang=<lang>&limit=<limit>` lists available documentation versions.
+- `GET /fetch?lang=<lang>&version=<version>` clones, parses, and indexes a documentation release.
 
-Pour le choix du modèles à télécharger dans ollama
+## Notes
+- Default embeddings are handled by the Weaviate vector store; adapt them for your environment as needed.
+- Recommended Ollama embedding models:
+  - `nomic-embed-text` for fast local ingestion.
+  - `mxbai-embed-large` when rich semantic context is required.
+  - `snowflake-arctic-embed` for experimental setups.
 
-| Cas d’usage                        | Modèle                   | Taille | Temps / chunk | Commentaire         |
-| ---------------------------------- | ------------------------ | ------ | ------------- | ------------------- |
-| ⚡ Ingestion rapide, RAG local      | **`nomic-embed-text`**   | 120 MB | ~0.1 s        | ✅ Idéal             |
-| 📚 Contexte riche, recherche fine  | `mxbai-embed-large`      | 1.2 GB | ~1 s          | Pour docs complexes |
-| 🧪 Expérimental, technique         | `snowflake-arctic-embed` | 1 GB   | ~0.8 s        | Bon mix             |
-
-💡 Pourquoi les ports ne sont pas exposés
-
-Les ports ne sont pas exposés, car les services tournent dans un réseau Docker isolé.
-Seuls les autres conteneurs du même réseau y ont accès, ce qui évite d’ouvrir inutilement des ports vers l’extérieur et garde la stack plus simple.
-
-Depuis ce réseau, un service peut streamer ou consommer les autres sans problème.
-N’hésitez pas à adapter cette approche selon votre infrastructure ou vos besoins d’accès.
-
-## TODO
-[ ] Fournir d'autres sources de documentation
-
-[ ] Ajouter une base de donnée
-
-[ ] Page de connexion + admin pour la gestion des sources
-
-[ ] Permettre une sélection des versions de document à précharger
-
-[ ] Ajouter un seveur MCP
+## Roadmap
+- Additional documentation sources
+- Database-backed source catalog (done)
+- Authentication and admin hardening
+- Pre-selectable documentation versions
+- MCP server integration
