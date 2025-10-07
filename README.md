@@ -35,3 +35,10 @@ Seuls les autres conteneurs du même réseau y ont accès, ce qui évite d’ouv
 
 Depuis ce réseau, un service peut streamer ou consommer les autres sans problème.
 N’hésitez pas à adapter cette approche selon votre infrastructure ou vos besoins d’accès.
+
+## TODO
+[] Fournir d'autres sources de documentation
+[] Ajouter une base de donnée
+[] Page de connexion + admin pour la gestion des sources
+[] Permettre une sélection des versions de document à précharger
+[] Ajouter un seveur MCP
